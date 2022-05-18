@@ -162,7 +162,8 @@ namespace CoffeeShop.Controllers
             List<Claim> claims = new List<Claim>
             {
                 new Claim("email", employees.Email),
-                new Claim("role", employees.Role)
+                new Claim(ClaimTypes.Role, employees.Role),
+                new Claim("id", employees.EmployeeId)
             };
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8

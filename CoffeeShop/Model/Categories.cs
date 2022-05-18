@@ -7,7 +7,6 @@ namespace CoffeeShop.Model
         [Key]
         [Required]
         public string CategoryId { get; set; } = string.Empty;
-
         public string Name { get; set; } = String.Empty;
     }
 }
