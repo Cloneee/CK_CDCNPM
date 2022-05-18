@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace CoffeeShop.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class ResetMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -27,12 +27,12 @@ namespace CoffeeShop.Migrations
                 name: "Categories",
                 columns: table => new
                 {
-                    CategoriesId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CategoryId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Categories", x => x.CategoriesId);
+                    table.PrimaryKey("PK_Categories", x => x.CategoryId);
                 });
 
             migrationBuilder.CreateTable(
@@ -108,7 +108,7 @@ namespace CoffeeShop.Migrations
                         name: "FK_Products_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
-                        principalColumn: "CategoriesId",
+                        principalColumn: "CategoryId",
                         onDelete: ReferentialAction.Cascade);
                 });
 

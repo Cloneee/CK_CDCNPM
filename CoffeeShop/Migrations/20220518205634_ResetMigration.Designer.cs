@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoffeeShop.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20220422112528_LoginTestV3")]
-    partial class LoginTestV3
+    [Migration("20220518205634_ResetMigration")]
+    partial class ResetMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -49,14 +49,14 @@ namespace CoffeeShop.Migrations
 
             modelBuilder.Entity("CoffeeShop.Model.Categories", b =>
                 {
-                    b.Property<string>("CategoriesId")
+                    b.Property<string>("CategoryId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("CategoriesId");
+                    b.HasKey("CategoryId");
 
                     b.ToTable("Categories");
                 });
