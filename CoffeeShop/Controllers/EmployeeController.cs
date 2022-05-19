@@ -52,6 +52,15 @@ namespace CoffeeShop.Controllers
                     checkId = await dataContext.Employees.FindAsync(newEmId);
                 }
             }
+
+            var checkEmail = dataContext.Employees
+                .Where(s => s.Email == request.Email)
+                .SingleOrDefault();
+            if(checkEmail != null)
+            {
+                return BadRequest("Email này đã tồn tại. Xin vui lòng đăng ký bằng Email khác");
+            }
+
             var newEmployee = new Employees
             {
                 EmployeeId = newEmId,

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoffeeShop.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20220518205634_ResetMigration")]
-    partial class ResetMigration
+    [Migration("20220519114823_FixbugV2")]
+    partial class FixbugV2
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,29 +23,6 @@ namespace CoffeeShop.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
-
-            modelBuilder.Entity("CoffeeShop.Model.Account", b =>
-                {
-                    b.Property<string>("Username")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<byte[]>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<byte[]>("PasswordSalt")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Username");
-
-                    b.ToTable("Account");
-                });
 
             modelBuilder.Entity("CoffeeShop.Model.Categories", b =>
                 {
@@ -99,6 +76,9 @@ namespace CoffeeShop.Migrations
 
                     b.HasKey("CustomerId");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("Customers");
                 });
 
@@ -141,6 +121,9 @@ namespace CoffeeShop.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("EmployeeId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Employees");
                 });
@@ -280,7 +263,7 @@ namespace CoffeeShop.Migrations
             modelBuilder.Entity("CoffeeShop.Model.OrderItems", b =>
                 {
                     b.HasOne("CoffeeShop.Model.Orders", "Orders")
-                        .WithMany("Items")
+                        .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -328,7 +311,7 @@ namespace CoffeeShop.Migrations
 
             modelBuilder.Entity("CoffeeShop.Model.Orders", b =>
                 {
-                    b.Navigation("Items");
+                    b.Navigation("OrderItems");
                 });
 #pragma warning restore 612, 618
         }

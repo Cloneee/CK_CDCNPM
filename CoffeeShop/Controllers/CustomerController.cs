@@ -53,6 +53,15 @@ namespace CoffeeShop.Controllers
                     checkId = await dataContext.Customers.FindAsync(newCusId);
                 }
             }
+
+            var checkEmail = dataContext.Customers
+                .Where(s => s.Email == request.Email)
+                .SingleOrDefault();
+            if (checkEmail != null)
+            {
+                return BadRequest("Email này đã tồn tại. Xin vui lòng đăng ký bằng Email khác");
+            }
+
             var newCustomer = new Customers {
                 CustomerId = newCusId,
                 Name = request.Name,
@@ -61,6 +70,7 @@ namespace CoffeeShop.Controllers
                 Email = request.Email,
                 Password = passwordHash,
                 PasswordKey = passwordKey,
+                Role = "Customer"
             };
 
             dataContext.Customers.Add(newCustomer);
@@ -83,6 +93,15 @@ namespace CoffeeShop.Controllers
                     checkId = await dataContext.Customers.FindAsync(newCusId);
                 }
             }
+
+            var checkEmail = dataContext.Customers
+                .Where(s => s.Email == request.Email)
+                .SingleOrDefault();
+            if (checkEmail != null)
+            {
+                return BadRequest("Email này đã tồn tại. Xin vui lòng đăng ký bằng Email khác");
+            }
+
             var newCustomer = new Customers
             {
                 CustomerId = newCusId,
@@ -92,6 +111,7 @@ namespace CoffeeShop.Controllers
                 Email = request.Email,
                 Password = passwordHash,
                 PasswordKey = passwordKey,
+                Role = "Customer"
             };
 
             dataContext.Customers.Add(newCustomer);

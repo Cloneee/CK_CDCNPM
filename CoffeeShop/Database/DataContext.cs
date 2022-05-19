@@ -23,6 +23,13 @@ namespace CoffeeShop.Database
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Employees>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<Customers>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
 
         }
     }
