@@ -7,11 +7,11 @@ namespace CoffeeShop.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class OrderItemController : ControllerBase
+    public class OrderItemsController : ControllerBase
     {
         private readonly DataContext dataContext;
 
-        public OrderItemController(DataContext dataContext)
+        public OrderItemsController(DataContext dataContext)
         {
             this.dataContext = dataContext;
         }
