@@ -7,11 +7,11 @@ namespace CoffeeShop.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class OrderItemsController : ControllerBase
+    public class OrderItemController : ControllerBase
     {
         private readonly DataContext dataContext;
 
-        public OrderItemsController(DataContext dataContext)
+        public OrderItemController(DataContext dataContext)
         {
             this.dataContext = dataContext;
         }
@@ -44,10 +44,20 @@ namespace CoffeeShop.Controllers
             var product = await dataContext.Products.FindAsync(request.ProductId);
             if (product == null || order == null)
                 return NotFound();
-            
+
+            var newItemId = "ITEM" + AutoGenerateId();
+            var checkId = await dataContext.OrderItems.FindAsync(newItemId);
+            if (checkId != null)
+            {
+                while (checkId != null)
+                {
+                    newItemId = "ITEM" + AutoGenerateId();
+                    checkId = await dataContext.OrderItems.FindAsync(newItemId);
+                }
+            }
             var newOrderItem = new OrderItems
             {
-                OrderItemId = request.OrderItemId,
+                OrderItemId = newItemId,
                 Quantity = request.Quantity,
                 OrderId = request.OrderId,
                 ProductId = request.ProductId
@@ -59,10 +69,10 @@ namespace CoffeeShop.Controllers
             return await GetAll(newOrderItem.OrderId);
         }
 
-        [HttpPut]
-        public async Task<ActionResult<OrderItems>> UpdateOrderItem(OrderItemDTO request)
+        [HttpPut("update/{id}")]
+        public async Task<ActionResult<OrderItems>> UpdateOrderItem(OrderItemDTO request, string id)
         {
-            var dbOrderItem = await dataContext.OrderItems.FindAsync(request.OrderItemId);
+            var dbOrderItem = await dataContext.OrderItems.FindAsync(id);
             if (dbOrderItem == null)
             {
                 return BadRequest("OrderItems not found");
@@ -71,7 +81,6 @@ namespace CoffeeShop.Controllers
             dbOrderItem.Quantity = request.Quantity;
             dbOrderItem.ProductId = request.ProductId;
             dbOrderItem.OrderId = request.OrderId;
-            dbOrderItem.ProductId = request.ProductId;
 
             await dataContext.SaveChangesAsync();
             return Ok(await dataContext.OrderItems.ToListAsync());
@@ -90,6 +99,31 @@ namespace CoffeeShop.Controllers
             await dataContext.SaveChangesAsync();
 
             return Ok(await dataContext.OrderItems.ToListAsync());
+        }
+
+        [NonAction]
+        public string AutoGenerateId()
+        {
+            string num = "1234567890";
+            int len = num.Length;
+            string id = string.Empty;
+            int iddigit = 7;
+            string finaldigit;
+
+            int getindex;
+
+            for (int i = 0; i < iddigit; i++)
+            {
+                do
+                {
+                    getindex = new Random().Next(0, len);
+                    finaldigit = num.ToCharArray()[getindex].ToString();
+                }
+                while (id.IndexOf(finaldigit) != -1);
+                id += finaldigit;
+            }
+
+            return id;
         }
     }
 }

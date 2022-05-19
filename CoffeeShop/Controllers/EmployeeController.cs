@@ -42,10 +42,19 @@ namespace CoffeeShop.Controllers
         public async Task<ActionResult<List<Employees>>> AddEmployee(EmployeeDTO request)
         {
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordKey);
-
+            var newEmId = "EM" + AutoGenerateId();
+            var checkId = await dataContext.Employees.FindAsync(newEmId);
+            if (checkId != null)
+            {
+                while (checkId != null)
+                {
+                    newEmId = "EM" + AutoGenerateId();
+                    checkId = await dataContext.Employees.FindAsync(newEmId);
+                }
+            }
             var newEmployee = new Employees
             {
-                EmployeeId = request.EmplopyeeId,
+                EmployeeId = newEmId,
                 Name = request.Name,
                 Phone = request.Phone,
                 Address = request.Address,
@@ -63,9 +72,9 @@ namespace CoffeeShop.Controllers
         }
 
         [HttpPut("Admin/UpdateStaff/{id}")]
-        public async Task<ActionResult<Employees>> UpdateEmployee(Employees request)
+        public async Task<ActionResult<Employees>> UpdateEmployee(SalaryNRoleDTO request, string id)
         {
-            var dbEmployee = await dataContext.Employees.FindAsync(request.EmployeeId);
+            var dbEmployee = await dataContext.Employees.FindAsync(id);
             if (dbEmployee == null)
             {
                 return BadRequest("Employees not found");
@@ -78,10 +87,10 @@ namespace CoffeeShop.Controllers
             return Ok(await dataContext.Employees.ToListAsync());
         }
 
-        [HttpPut("Staff/UpdateProfile")]
-        public async Task<ActionResult<Employees>> UpdateProfile(EmployeeDTO request)
+        [HttpPut("Staff/UpdateProfile/{id}")]
+        public async Task<ActionResult<Employees>> UpdateProfile(StaffProfileDTO request, string id)
         {
-            var dbEmployee = await dataContext.Employees.FindAsync(request.EmplopyeeId);
+            var dbEmployee = await dataContext.Employees.FindAsync(id);
             if (dbEmployee == null)
             {
                 return BadRequest("Employees not found");
@@ -94,6 +103,39 @@ namespace CoffeeShop.Controllers
 
             await dataContext.SaveChangesAsync();
             return Ok(await dataContext.Employees.ToListAsync());
+        }
+
+        [HttpPost("Employee/ChangePassword")]
+        public async Task<ActionResult<Customers>> ChangePassword(ChangePasswordDTO request)
+        {
+
+            var employee = dataContext.Employees
+                .Where(s => s.Email == request.Username)
+                .SingleOrDefault();
+
+            if (employee == null)
+                return BadRequest("Employee not found");
+
+            if (employee.Email != request.Username)
+            {
+                return BadRequest("Invalid username");
+            }
+            if (!VerifyPasswordHash(request.currentPassword, employee.Password, employee.PasswordKey))
+            {
+                return BadRequest("Wrong password");
+            }
+            if (request.confirmPassword != request.newPassword)
+            {
+                return BadRequest("confirm password does not match");
+            }
+            CreatePasswordHash(request.confirmPassword, out byte[] passwordHash, out byte[] passwordKey);
+
+            employee.Password = passwordHash;
+            employee.PasswordKey = passwordKey;
+
+            await dataContext.SaveChangesAsync();
+            return Ok(await dataContext.Employees.ToListAsync());
+
         }
 
         [HttpDelete("{id}")]
@@ -179,6 +221,30 @@ namespace CoffeeShop.Controllers
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
             return jwt;
+        }
+        [NonAction]
+        public string AutoGenerateId()
+        {
+            string num = "1234567890";
+            int len = num.Length;
+            string id = string.Empty;
+            int iddigit = 7;
+            string finaldigit;
+
+            int getindex;
+
+            for (int i = 0; i < iddigit; i++)
+            {
+                do
+                {
+                    getindex = new Random().Next(0, len);
+                    finaldigit = num.ToCharArray()[getindex].ToString();
+                }
+                while (id.IndexOf(finaldigit) != -1);
+                id += finaldigit;
+            }
+
+            return id;
         }
     }
 }

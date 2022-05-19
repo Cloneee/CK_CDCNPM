@@ -20,8 +20,6 @@ namespace CoffeeShop.Database
 
         public DbSet<OrderItems> OrderItems { get; set; }
 
-        public DbSet<Account> Account { get; set; }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

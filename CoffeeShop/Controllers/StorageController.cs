@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using CoffeeShop.Model;
-
+using CoffeeShop.DTO;
 namespace CoffeeShop.Controllers
 {
     [Route("api/[controller]")]
@@ -30,17 +30,36 @@ namespace CoffeeShop.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<List<Storages>>> AddStorage(Storages storage) {
+        public async Task<ActionResult<List<Storages>>> AddStorage(StorageDTO storage) {
 
-            dataContext.Storages.Add(storage);
+            var newStorageId = "STO" + AutoGenerateId();
+            var checkId = await dataContext.Storages.FindAsync(newStorageId);
+            if (checkId != null)
+            {
+                while (checkId != null)
+                {
+                    newStorageId = "STO" + AutoGenerateId();
+                    checkId = await dataContext.Storages.FindAsync(newStorageId);
+                }
+            }
+            var newStorage = new Storages {
+                StorageId = newStorageId,
+                Name = storage.Name,
+                Description = storage.Description,
+                Quantity = storage.Quantity,
+                Unit = storage.Unit,
+                dateUpdate = storage.dateUpdate
+            };
+
+            dataContext.Storages.Add(newStorage);
             await dataContext.SaveChangesAsync();
 
             return Ok(await dataContext.Storages.ToListAsync());
         }
 
-        [HttpPut]
-        public async Task<ActionResult<Storages>> UpdateStorage(Storages request) {
-            var dbStorage = await dataContext.Storages.FindAsync(request.StorageId);
+        [HttpPut("update/{id}")]
+        public async Task<ActionResult<Storages>> UpdateStorage(StorageDTO request, string id) {
+            var dbStorage = await dataContext.Storages.FindAsync(id);
             if (dbStorage == null)
             {
                 return BadRequest("Storages not found");
@@ -68,6 +87,30 @@ namespace CoffeeShop.Controllers
             await dataContext.SaveChangesAsync();
 
             return Ok(await dataContext.Storages.ToListAsync());
+        }
+        [NonAction]
+        public string AutoGenerateId()
+        {
+            string num = "1234567890";
+            int len = num.Length;
+            string id = string.Empty;
+            int iddigit = 7;
+            string finaldigit;
+
+            int getindex;
+
+            for (int i = 0; i < iddigit; i++)
+            {
+                do
+                {
+                    getindex = new Random().Next(0, len);
+                    finaldigit = num.ToCharArray()[getindex].ToString();
+                }
+                while (id.IndexOf(finaldigit) != -1);
+                id += finaldigit;
+            }
+
+            return id;
         }
     }
 }

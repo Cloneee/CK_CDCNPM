@@ -40,12 +40,22 @@ namespace CoffeeShop.Controllers
         {
             var dbCategory = await dataContext.Categories.FindAsync(products.CategoryId);
 
+            var newProductId = "PRO" + AutoGenerateId();
+            var checkId = await dataContext.Products.FindAsync(newProductId);
+            if (checkId != null)
+            {
+                while (checkId != null)
+                {
+                    newProductId = "PRO" + AutoGenerateId();
+                    checkId = await dataContext.Products.FindAsync(newProductId);
+                }
+            }
             if (dbCategory == null)
                 return NotFound();
 
             var newProduct = new Products
             {
-                ProductId = products.ProductId,
+                ProductId = newProductId,
                 Name = products.Name,
                 Description = products.Description,
                 Images = products.Images,
@@ -61,10 +71,10 @@ namespace CoffeeShop.Controllers
             return Ok(await dataContext.Products.ToListAsync());
         }
 
-        [HttpPut]
-        public async Task<ActionResult<Products>> UpdateProduct(ProductDTO request)
+        [HttpPut("update/{id}")]
+        public async Task<ActionResult<Products>> UpdateProduct(ProductDTO request, string id)
         {
-            var dbProduct = await dataContext.Products.FindAsync(request.ProductId);
+            var dbProduct = await dataContext.Products.FindAsync(id);
             if (dbProduct == null)
             {
                 return BadRequest("Products not found");
@@ -97,6 +107,29 @@ namespace CoffeeShop.Controllers
             return Ok(await dataContext.Products.ToListAsync());
         }
 
-        // API upload hình ảnh
+        [NonAction]
+        public string AutoGenerateId()
+        {
+            string num = "1234567890";
+            int len = num.Length;
+            string id = string.Empty;
+            int iddigit = 7;
+            string finaldigit;
+
+            int getindex;
+
+            for (int i = 0; i < iddigit; i++)
+            {
+                do
+                {
+                    getindex = new Random().Next(0, len);
+                    finaldigit = num.ToCharArray()[getindex].ToString();
+                }
+                while (id.IndexOf(finaldigit) != -1);
+                id += finaldigit;
+            }
+
+            return id;
+        }
     }
 }

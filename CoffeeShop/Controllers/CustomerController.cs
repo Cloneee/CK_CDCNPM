@@ -6,6 +6,7 @@ using CoffeeShop.DTO;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CoffeeShop.Controllers
 {
@@ -42,16 +43,24 @@ namespace CoffeeShop.Controllers
         public async Task<ActionResult<List<Customers>>> AddCustomer(CustomerDTO request)
         {
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordKey);
-
+            var newCusId = "CUS" + AutoGenerateId();
+            var checkId = await dataContext.Customers.FindAsync(newCusId);
+            if (checkId != null)
+            {
+                while (checkId == null)
+                {
+                    newCusId = "CUS" + AutoGenerateId();
+                    checkId = await dataContext.Customers.FindAsync(newCusId);
+                }
+            }
             var newCustomer = new Customers {
-                CustomerId = request.CustomerId,
+                CustomerId = newCusId,
                 Name = request.Name,
                 Address = request.Address,
                 Phone = request.Phone,
                 Email = request.Email,
                 Password = passwordHash,
                 PasswordKey = passwordKey,
-                Role = request.Role
             };
 
             dataContext.Customers.Add(newCustomer);
@@ -60,21 +69,29 @@ namespace CoffeeShop.Controllers
             return Ok(await dataContext.Customers.ToListAsync());
         }
 
-        [HttpPost("Register")]
+        [HttpPost("Customer/RegisterCustomer")]
         public async Task<ActionResult<List<Customers>>> Register(CustomerDTO request)
         {
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordKey);
-
+            var newCusId = "CUS" + AutoGenerateId();
+            var checkId = await dataContext.Customers.FindAsync(newCusId);
+            if (checkId != null)
+            {
+                while (checkId == null)
+                {
+                    newCusId = "CUS" + AutoGenerateId();
+                    checkId = await dataContext.Customers.FindAsync(newCusId);
+                }
+            }
             var newCustomer = new Customers
             {
-                CustomerId = request.CustomerId,
+                CustomerId = newCusId,
                 Name = request.Name,
                 Address = request.Address,
                 Phone = request.Phone,
                 Email = request.Email,
                 Password = passwordHash,
                 PasswordKey = passwordKey,
-                Role = "NormalCus"
             };
 
             dataContext.Customers.Add(newCustomer);
@@ -83,10 +100,10 @@ namespace CoffeeShop.Controllers
             return Ok(await dataContext.Customers.ToListAsync());
         }
 
-        [HttpPut]
-        public async Task<ActionResult<Customers>> UpdateCustomer(Customers request)
+        [HttpPut("updateProfile/{id}"), Authorize(Roles = "Customer")]
+        public async Task<ActionResult<Customers>> UpdateCustomer(CustomerProfileDTO request, string id)
         {
-            var dbCustomer = await dataContext.Customers.FindAsync(request.CustomerId);
+            var dbCustomer = await dataContext.Customers.FindAsync(id);
             if (dbCustomer == null)
             {
                 return BadRequest("Customers not found");
@@ -135,7 +152,38 @@ namespace CoffeeShop.Controllers
             }
         }
 
-        [HttpPost("Login")]
+        [HttpPost("Customer/ChangePassword"), Authorize(Roles = "Customer")]
+        public async Task<ActionResult<Customers>> ChangePassword(ChangePasswordDTO request)
+        {
+
+            var customer = dataContext.Customers
+                .Where(s => s.Email == request.Username)
+                .SingleOrDefault();
+
+            if (customer == null)
+                return BadRequest("Customer not found");
+
+            if (customer.Email != request.Username)
+            {
+                return BadRequest("Invalid username");
+            }
+            if (!VerifyPasswordHash(request.currentPassword, customer.Password, customer.PasswordKey)){
+                return BadRequest("Wrong password");
+            }
+            if(request.confirmPassword != request.newPassword)
+            {
+                return BadRequest("confirm password does not match");
+            }
+            CreatePasswordHash(request.confirmPassword, out byte[] passwordHash, out byte[] passwordKey);
+
+            customer.Password = passwordHash;
+            customer.PasswordKey = passwordKey;
+
+            await dataContext.SaveChangesAsync();
+            return Ok(await dataContext.Customers.ToListAsync());
+
+        }
+        [HttpPost("Customer/Login")]
         public async Task<ActionResult<string>> Login(AccountDTO request)
         {
             var customer = dataContext.Customers
@@ -156,14 +204,15 @@ namespace CoffeeShop.Controllers
 
             string token = CreateToken(customer);
 
-            return Ok(new {token = token, name = customer.Name});
+            return Ok(token);
         }
 
         private string CreateToken(Customers customers) {
 
             List<Claim> claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, customers.Email)
+                new Claim(ClaimTypes.Name, customers.Email),
+                new Claim(ClaimTypes.Role, "Customer")
             };
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8
@@ -180,6 +229,31 @@ namespace CoffeeShop.Controllers
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
             return jwt;
+        }
+
+        [NonAction]
+        public string AutoGenerateId()
+        {
+            string num = "1234567890";
+            int len = num.Length;
+            string id = string.Empty;
+            int iddigit = 7;
+            string finaldigit;
+
+            int getindex;
+
+            for (int i = 0; i < iddigit; i++)
+            {
+                do
+                {
+                    getindex = new Random().Next(0, len);
+                    finaldigit = num.ToCharArray()[getindex].ToString();
+                }
+                while (id.IndexOf(finaldigit) != -1);
+                id += finaldigit;
+            }
+
+            return id;
         }
     }
 }
