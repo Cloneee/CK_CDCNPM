@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoffeeShop.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20220519114823_FixbugV2")]
-    partial class FixbugV2
+    [Migration("20220519151758_ResetDB")]
+    partial class ResetDB
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
