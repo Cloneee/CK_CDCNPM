@@ -62,7 +62,7 @@ namespace CoffeeShop.Controllers
                 Price = products.Price,
                 CategoryId = products.CategoryId,
                 IsFeatured = products.IsFeatured,
-                dateCreated = products.dateCreated
+                dateCreated = DateTime.Now
             };
 
             dataContext.Products.Add(newProduct);
@@ -71,7 +71,7 @@ namespace CoffeeShop.Controllers
             return Ok(newProduct);
         }
 
-        [HttpPut("Update/{id}")]
+        [HttpPut("{id}")]
         public async Task<ActionResult<Products>> UpdateProduct(ProductDTO request, string id)
         {
             var dbProduct = await dataContext.Products.FindAsync(id);
@@ -86,7 +86,7 @@ namespace CoffeeShop.Controllers
             dbProduct.Price = request.Price;
             dbProduct.CategoryId = request.CategoryId;
             dbProduct.IsFeatured = request.IsFeatured;
-            dbProduct.dateCreated = request.dateCreated;
+            dbProduct.dateCreated = DateTime.Now;
 
             await dataContext.SaveChangesAsync();
             return Ok(dbProduct);
