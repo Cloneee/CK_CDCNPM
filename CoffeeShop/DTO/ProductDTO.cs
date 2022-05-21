@@ -8,6 +8,5 @@
         public int Price { get; set; }
         public string CategoryId { get; set; }
         public Boolean IsFeatured { get; set; }
-        public DateTime dateCreated { get; set; }
     }
 }

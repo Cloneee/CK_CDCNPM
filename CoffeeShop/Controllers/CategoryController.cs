@@ -53,7 +53,7 @@ namespace CoffeeShop.Controllers
             dataContext.Categories.Add(newCatergory);
             await dataContext.SaveChangesAsync();
 
-            return Ok(await dataContext.Categories.ToListAsync());
+            return Ok(newCatergory);
         }
 
         [HttpPut("updateCat/{id}")]
