@@ -33,7 +33,7 @@ namespace CoffeeShop.Controllers
             return Ok(dbOrder);
         }
 
-        [HttpGet("ViewDetail")]
+        [HttpGet("ViewItems/{OrderId}")]
         public async Task<ActionResult<List<OrderItems>>> ViewOrderDetail(string OrderId)
         {
             var OrderItems = await dataContext.OrderItems
@@ -43,7 +43,7 @@ namespace CoffeeShop.Controllers
             return OrderItems;
         }
 
-        [HttpPost]
+        [HttpPost("Add")]
         public async Task<ActionResult<List<Orders>>> AddOrder(OrdersDTO orders)
         {
             var newOrderId = "BILL" + AutoGenerateId();
@@ -71,10 +71,10 @@ namespace CoffeeShop.Controllers
             dataContext.Orders.Add(newOrder);
             await dataContext.SaveChangesAsync();
 
-            return Ok(await dataContext.Orders.ToListAsync());
+            return Ok(newOrder);
         }
 
-        [HttpPut("update/{id}")]
+        [HttpPut("Update/{id}")]
         public async Task<ActionResult<Orders>> UpdateOrder(OrdersDTO request, string id)
         {
             var dbOrder = await dataContext.Orders.FindAsync(id);
@@ -92,10 +92,10 @@ namespace CoffeeShop.Controllers
             dbOrder.dateOrdered = request.dateOrdered;
 
             await dataContext.SaveChangesAsync();
-            return Ok(await dataContext.Orders.ToListAsync());
+            return Ok(dbOrder);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<ActionResult> DeleteCustomerById(string id)
         {
             var dbOrder = await dataContext.Orders.FindAsync(id);
@@ -107,7 +107,7 @@ namespace CoffeeShop.Controllers
             dataContext.Orders.Remove(dbOrder);
             await dataContext.SaveChangesAsync();
 
-            return Ok(await dataContext.Orders.ToListAsync());
+            return Ok("Delete successful");
         }
 
         [NonAction]

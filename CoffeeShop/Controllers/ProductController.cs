@@ -16,13 +16,13 @@ namespace CoffeeShop.Controllers
             this.dataContext = dataContext;
         }
 
-        [HttpGet]
+        [HttpGet("GetAll")]
         public async Task<ActionResult<List<Products>>> GetAll()
         {
             return Ok(await dataContext.Products.ToListAsync());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GetById/{id}")]
         public async Task<ActionResult<Products>> GetById(string id)
         {
             var dbProduct = await dataContext.Products.FindAsync(id);
@@ -35,7 +35,7 @@ namespace CoffeeShop.Controllers
             return Ok(dbProduct);
         }
 
-        [HttpPost]
+        [HttpPost("Add")]
         public async Task<ActionResult<List<Products>>> AddProduct(ProductDTO products)
         {
             var dbCategory = await dataContext.Categories.FindAsync(products.CategoryId);
@@ -68,10 +68,10 @@ namespace CoffeeShop.Controllers
             dataContext.Products.Add(newProduct);
             await dataContext.SaveChangesAsync();
 
-            return Ok(await dataContext.Products.ToListAsync());
+            return Ok(newProduct);
         }
 
-        [HttpPut("update/{id}")]
+        [HttpPut("Update/{id}")]
         public async Task<ActionResult<Products>> UpdateProduct(ProductDTO request, string id)
         {
             var dbProduct = await dataContext.Products.FindAsync(id);
@@ -89,10 +89,10 @@ namespace CoffeeShop.Controllers
             dbProduct.dateCreated = request.dateCreated;
 
             await dataContext.SaveChangesAsync();
-            return Ok(await dataContext.Products.ToListAsync());
+            return Ok(dbProduct);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<ActionResult> DeleteProductById(string id)
         {
             var dbProduct = await dataContext.Products.FindAsync(id);
@@ -104,7 +104,7 @@ namespace CoffeeShop.Controllers
             dataContext.Products.Remove(dbProduct);
             await dataContext.SaveChangesAsync();
 
-            return Ok(await dataContext.Products.ToListAsync());
+            return Ok("Delete successful");
         }
 
         [NonAction]

@@ -15,13 +15,13 @@ namespace CoffeeShop.Controllers
             this.dataContext = dataContext;
         }
 
-        [HttpGet]
+        [HttpGet("GetAll")]
         public async Task<ActionResult<List<Categories>>> GetAll()
         {
             return Ok(await dataContext.Categories.ToListAsync());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GetById/{id}")]
         public async Task<ActionResult<Categories>> GetById(string id)
         {
             var dbCategories = await dataContext.Categories.FindAsync(id);
@@ -32,7 +32,7 @@ namespace CoffeeShop.Controllers
             return Ok(dbCategories);
         }
 
-        [HttpPost]  
+        [HttpPost("Add")]  
         public async Task<ActionResult<List<Categories>>> AddCategories(CategoryDTO request)
         {
             var newCatId = "CAT" + AutoGenerateId();
@@ -53,10 +53,10 @@ namespace CoffeeShop.Controllers
             dataContext.Categories.Add(newCatergory);
             await dataContext.SaveChangesAsync();
 
-            return Ok(await dataContext.Categories.ToListAsync());
+            return Ok(newCatergory);
         }
 
-        [HttpPut("updateCat/{id}")]
+        [HttpPut("Update/{id}")]
         public async Task<ActionResult<Categories>> UpdateCategories(CategoryDTO request, string id)
         {
             var dbCategories = await dataContext.Categories.FindAsync(id);
@@ -68,10 +68,10 @@ namespace CoffeeShop.Controllers
             dbCategories.Name = request.Name;
 
             await dataContext.SaveChangesAsync();
-            return Ok(await dataContext.Categories.ToListAsync());
+            return Ok(dbCategories);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<ActionResult> DeleteCategoriesById(string id)
         {
             var dbCategories = await dataContext.Categories.FindAsync(id);
@@ -83,7 +83,7 @@ namespace CoffeeShop.Controllers
             dataContext.Categories.Remove(dbCategories);
             await dataContext.SaveChangesAsync();
 
-            return Ok(await dataContext.Categories.ToListAsync());
+            return Ok("Delete successful");
         }
 
         [NonAction]

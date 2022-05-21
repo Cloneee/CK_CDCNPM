@@ -16,7 +16,8 @@ namespace CoffeeShop.Controllers
             this.dataContext = dataContext;
         }
 
-        [HttpGet]
+        // Giống ViewOrderDetail bên OrderController
+        [HttpGet("GetAll/{OrderId}")]
         public async Task<ActionResult<List<OrderItems>>> GetAll(string OrderId)
         {
             var OrderItems = await dataContext.OrderItems
@@ -26,7 +27,7 @@ namespace CoffeeShop.Controllers
             return OrderItems;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("GetById/{id}")]
         public async Task<ActionResult<OrderItems>> GetById(string id)
         {
             var dbOrderItem = await dataContext.OrderItems.FindAsync(id);
@@ -37,7 +38,7 @@ namespace CoffeeShop.Controllers
             return dbOrderItem;
         }
 
-        [HttpPost("AddOrderItem")]
+        [HttpPost("Add")]
         public async Task<ActionResult<List<OrderItems>>> AddOrderItem(OrderItemDTO request)
         {
             var order = await dataContext.Orders.FindAsync(request.OrderId);
@@ -69,7 +70,7 @@ namespace CoffeeShop.Controllers
             return await GetAll(newOrderItem.OrderId);
         }
 
-        [HttpPut("update/{id}")]
+        [HttpPut("Update/{id}")]
         public async Task<ActionResult<OrderItems>> UpdateOrderItem(OrderItemDTO request, string id)
         {
             var dbOrderItem = await dataContext.OrderItems.FindAsync(id);
@@ -83,10 +84,10 @@ namespace CoffeeShop.Controllers
             dbOrderItem.OrderId = request.OrderId;
 
             await dataContext.SaveChangesAsync();
-            return Ok(await dataContext.OrderItems.ToListAsync());
+            return Ok(dbOrderItem);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<ActionResult> DeleteOrderItemById(string id)
         {
             var dbOrderItem = await dataContext.OrderItems.FindAsync(id);
@@ -98,7 +99,7 @@ namespace CoffeeShop.Controllers
             dataContext.OrderItems.Remove(dbOrderItem);
             await dataContext.SaveChangesAsync();
 
-            return Ok(await dataContext.OrderItems.ToListAsync());
+            return Ok("Delete successful");
         }
 
         [NonAction]

@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CoffeeShop.Controllers
 {
@@ -21,25 +22,80 @@ namespace CoffeeShop.Controllers
             this.configuration = configuration;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<List<Employees>>> GetAll()
+        [NonAction]
+        public string AutoGenerateId()
         {
-            return Ok(await dataContext.Employees.Select(x => new { x.EmployeeId, x.Name, x.Phone, x.Email, x.Address, x.Salary, x.Role }).ToListAsync());
-        }
+            string num = "1234567890";
+            int len = num.Length;
+            string id = string.Empty;
+            int iddigit = 7;
+            string finaldigit;
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Employees>> GetById(string id)
-        {
-            var dbEmployee = await dataContext.Employees.FindAsync(id);
-            if (dbEmployee == null)
+            int getindex;
+
+            for (int i = 0; i < iddigit; i++)
             {
-                return BadRequest("Employees not found");
+                do
+                {
+                    getindex = new Random().Next(0, len);
+                    finaldigit = num.ToCharArray()[getindex].ToString();
+                }
+                while (id.IndexOf(finaldigit) != -1);
+                id += finaldigit;
             }
-            return Ok(dbEmployee);
+
+            return id;
         }
 
-        [HttpPost("Admin/RegisterStaff")]
-        public async Task<ActionResult<List<Employees>>> AddEmployee(EmployeeDTO request)
+        private string CreateToken(Employees employees)
+        {
+
+            List<Claim> claims = new List<Claim>
+            {
+                new Claim("email", employees.Email),
+                new Claim(ClaimTypes.Role, employees.Role),
+                new Claim("id", employees.EmployeeId)
+            };
+
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8
+                .GetBytes(configuration.GetSection("AppSettings:Token").Value));
+
+            var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.Now.AddDays(1),
+                signingCredentials: cred
+                );
+
+            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+
+            return jwt;
+        }
+
+        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordKey)
+        {
+
+            using (var hmac = new HMACSHA512(passwordKey))
+            {
+
+                var computeHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                return computeHash.SequenceEqual(passwordHash);
+            }
+        }
+
+        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordKey)
+        {
+            using (var hmac = new HMACSHA512())
+            {
+                passwordKey = hmac.Key;
+                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+
+            }
+        }
+
+        [HttpPost("Register")]
+        public async Task<ActionResult<Employees>> Register(EmployeeDTO request)
         {
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordKey);
             var newEmId = "EM" + AutoGenerateId();
@@ -56,7 +112,7 @@ namespace CoffeeShop.Controllers
             var checkEmail = dataContext.Employees
                 .Where(s => s.Email == request.Email)
                 .SingleOrDefault();
-            if(checkEmail != null)
+            if (checkEmail != null)
             {
                 return BadRequest("Email này đã tồn tại. Xin vui lòng đăng ký bằng Email khác");
             }
@@ -77,44 +133,35 @@ namespace CoffeeShop.Controllers
             dataContext.Employees.Add(newEmployee);
             await dataContext.SaveChangesAsync();
 
-            return Ok(await dataContext.Employees.ToListAsync());
+            return Ok(newEmployee);
         }
 
-        [HttpPut("Admin/UpdateStaff/{id}")]
-        public async Task<ActionResult<Employees>> UpdateEmployee(SalaryNRoleDTO request, string id)
+        [HttpPost("Login")]
+        public async Task<ActionResult<string>> Login(AccountDTO request)
         {
-            var dbEmployee = await dataContext.Employees.FindAsync(id);
-            if (dbEmployee == null)
-            {
+            var employee = dataContext.Employees
+                .Where(s => s.Email == request.Username)
+                .SingleOrDefault();
+
+            if (employee == null)
                 return BadRequest("Employees not found");
+
+            if (employee.Email != request.Username)
+            {
+                return BadRequest("Invalid username");
             }
 
-            dbEmployee.Salary = request.Salary;
-            dbEmployee.Role = request.Role;
-
-            await dataContext.SaveChangesAsync();
-            return Ok(await dataContext.Employees.ToListAsync());
-        }
-
-        [HttpPut("Staff/UpdateProfile/{id}")]
-        public async Task<ActionResult<Employees>> UpdateProfile(StaffProfileDTO request, string id)
-        {
-            var dbEmployee = await dataContext.Employees.FindAsync(id);
-            if (dbEmployee == null)
+            if (!VerifyPasswordHash(request.Password, employee.Password, employee.PasswordKey))
             {
-                return BadRequest("Employees not found");
+                return BadRequest("Wrong password");
             }
 
-            dbEmployee.Name = request.Name;
-            dbEmployee.Email = request.Email;
-            dbEmployee.Address = request.Address;
-            dbEmployee.Phone = request.Phone;
+            string token = CreateToken(employee);
 
-            await dataContext.SaveChangesAsync();
-            return Ok(await dataContext.Employees.ToListAsync());
+            return Ok(new { token = token, role = employee.Role, name = employee.Name });
         }
 
-        [HttpPost("Employee/ChangePassword")]
+        [HttpPost("ChangePassword"), Authorize(Roles = "Waiter")]
         public async Task<ActionResult<Customers>> ChangePassword(ChangePasswordDTO request)
         {
 
@@ -143,11 +190,61 @@ namespace CoffeeShop.Controllers
             employee.PasswordKey = passwordKey;
 
             await dataContext.SaveChangesAsync();
-            return Ok(await dataContext.Employees.ToListAsync());
-
+            return Ok(employee);
         }
 
-        [HttpDelete("{id}")]
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<List<Employees>>> GetAll()
+        {
+            return Ok(await dataContext.Employees.Select(x => new { x.EmployeeId, x.Name, x.Phone, x.Email, x.Address, x.Salary, x.Role }).ToListAsync());
+        }
+
+        [HttpGet("GetById/{id}")]
+        public async Task<ActionResult<Employees>> GetById(string id)
+        {
+            var dbEmployee = await dataContext.Employees.FindAsync(id);
+            if (dbEmployee == null)
+            {
+                return BadRequest("Employees not found");
+            }
+            return Ok(dbEmployee);
+        }
+
+        [HttpPut("UpdateStaff/{id}")]
+        public async Task<ActionResult<Employees>> UpdateEmployee(SalaryNRoleDTO request, string id)
+        {
+            var dbEmployee = await dataContext.Employees.FindAsync(id);
+            if (dbEmployee == null)
+            {
+                return BadRequest("Employees not found");
+            }
+
+            dbEmployee.Salary = request.Salary;
+            dbEmployee.Role = request.Role;
+
+            await dataContext.SaveChangesAsync();
+            return Ok(dbEmployee);
+        }
+
+        [HttpPut("UpdateProfile/{id}")]
+        public async Task<ActionResult<Employees>> UpdateProfile(StaffProfileDTO request, string id)
+        {
+            var dbEmployee = await dataContext.Employees.FindAsync(id);
+            if (dbEmployee == null)
+            {
+                return BadRequest("Employees not found");
+            }
+
+            dbEmployee.Name = request.Name;
+            dbEmployee.Email = request.Email;
+            dbEmployee.Address = request.Address;
+            dbEmployee.Phone = request.Phone;
+
+            await dataContext.SaveChangesAsync();
+            return Ok(dbEmployee);
+        }
+
+        [HttpDelete("DeleteEmployee/{id}")]
         public async Task<ActionResult> DeleteEmployeeById(string id)
         {
             var dbEmployee = await dataContext.Employees.FindAsync(id);
@@ -159,102 +256,7 @@ namespace CoffeeShop.Controllers
             dataContext.Employees.Remove(dbEmployee);
             await dataContext.SaveChangesAsync();
 
-            return Ok(await dataContext.Employees.ToListAsync());
-        }
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordKey)
-        {
-            using (var hmac = new HMACSHA512())
-            {
-                passwordKey = hmac.Key;
-                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-
-            }
-        }
-
-        [HttpPost("Staff/Login")]
-        public async Task<ActionResult<string>> Login(AccountDTO request)
-        {
-            var employee = dataContext.Employees
-                .Where(s => s.Email == request.Username)
-                .SingleOrDefault();
-
-            if (employee == null)
-                return BadRequest("Employees not found");
-
-            if (employee.Email != request.Username)
-            {
-                return BadRequest("Invalid username");
-            }
-
-            if (!VerifyPasswordHash(request.Password, employee.Password, employee.PasswordKey))
-            {
-                return BadRequest("Wrong password");
-            }
-
-            string token = CreateToken(employee);
-
-            return Ok(new {token = token, role = employee.Role, name = employee.Name});
-        }
-
-        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordKey)
-        {
-
-            using (var hmac = new HMACSHA512(passwordKey))
-            {
-
-                var computeHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                return computeHash.SequenceEqual(passwordHash);
-            }
-        }
-
-        private string CreateToken(Employees employees)
-        {
-
-            List<Claim> claims = new List<Claim>
-            {
-                new Claim("email", employees.Email),
-                new Claim(ClaimTypes.Role, employees.Role),
-                new Claim("id", employees.EmployeeId)
-            };
-
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8
-                .GetBytes(configuration.GetSection("AppSettings:Token").Value));
-
-            var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.Now.AddDays(1),
-                signingCredentials: cred
-                );
-
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return jwt;
-        }
-        [NonAction]
-        public string AutoGenerateId()
-        {
-            string num = "1234567890";
-            int len = num.Length;
-            string id = string.Empty;
-            int iddigit = 7;
-            string finaldigit;
-
-            int getindex;
-
-            for (int i = 0; i < iddigit; i++)
-            {
-                do
-                {
-                    getindex = new Random().Next(0, len);
-                    finaldigit = num.ToCharArray()[getindex].ToString();
-                }
-                while (id.IndexOf(finaldigit) != -1);
-                id += finaldigit;
-            }
-
-            return id;
+            return Ok("Delete successful");
         }
     }
 }
