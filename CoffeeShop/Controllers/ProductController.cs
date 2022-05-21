@@ -16,13 +16,13 @@ namespace CoffeeShop.Controllers
             this.dataContext = dataContext;
         }
 
-        [HttpGet("GetAll")]
+        [HttpGet()]
         public async Task<ActionResult<List<Products>>> GetAll()
         {
             return Ok(await dataContext.Products.ToListAsync());
         }
 
-        [HttpGet("GetById/{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Products>> GetById(string id)
         {
             var dbProduct = await dataContext.Products.FindAsync(id);
@@ -35,7 +35,7 @@ namespace CoffeeShop.Controllers
             return Ok(dbProduct);
         }
 
-        [HttpPost("Add")]
+        [HttpPost()]
         public async Task<ActionResult<List<Products>>> AddProduct(ProductDTO products)
         {
             var dbCategory = await dataContext.Categories.FindAsync(products.CategoryId);
@@ -92,7 +92,7 @@ namespace CoffeeShop.Controllers
             return Ok(dbProduct);
         }
 
-        [HttpDelete("Delete/{id}")]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteProductById(string id)
         {
             var dbProduct = await dataContext.Products.FindAsync(id);

@@ -161,7 +161,7 @@ namespace CoffeeShop.Controllers
             return Ok(new { token = token, role = employee.Role, name = employee.Name });
         }
 
-        [HttpPost("ChangePassword"), Authorize(Roles = "Waiter")]
+        [HttpPost("ChangePassword")]
         public async Task<ActionResult<Customers>> ChangePassword(ChangePasswordDTO request)
         {
 
@@ -193,13 +193,13 @@ namespace CoffeeShop.Controllers
             return Ok(employee);
         }
 
-        [HttpGet("GetAll")]
+        [HttpGet()]
         public async Task<ActionResult<List<Employees>>> GetAll()
         {
             return Ok(await dataContext.Employees.Select(x => new { x.EmployeeId, x.Name, x.Phone, x.Email, x.Address, x.Salary, x.Role }).ToListAsync());
         }
 
-        [HttpGet("GetById/{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Employees>> GetById(string id)
         {
             var dbEmployee = await dataContext.Employees.FindAsync(id);
@@ -210,7 +210,7 @@ namespace CoffeeShop.Controllers
             return Ok(dbEmployee);
         }
 
-        [HttpPut("UpdateStaff/{id}")]
+        [HttpPut("{id}")]
         public async Task<ActionResult<Employees>> UpdateEmployee(SalaryNRoleDTO request, string id)
         {
             var dbEmployee = await dataContext.Employees.FindAsync(id);
@@ -244,7 +244,7 @@ namespace CoffeeShop.Controllers
             return Ok(dbEmployee);
         }
 
-        [HttpDelete("DeleteEmployee/{id}")]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteEmployeeById(string id)
         {
             var dbEmployee = await dataContext.Employees.FindAsync(id);

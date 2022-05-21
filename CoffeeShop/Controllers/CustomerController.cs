@@ -191,13 +191,13 @@ namespace CoffeeShop.Controllers
             return Ok(await dataContext.Customers.ToListAsync());
         }
 
-        [HttpGet("GetAllCustomer")]
+        [HttpGet()]
         public async Task<ActionResult<List<Customers>>> GetAll()
         {
             return Ok(await dataContext.Customers.ToListAsync());
         }
 
-        [HttpGet("GetById/{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Customers>> GetById(string id)
         {
             var dbCustomer = await dataContext.Customers.FindAsync(id);
@@ -208,7 +208,7 @@ namespace CoffeeShop.Controllers
             return Ok(dbCustomer);
         }
 
-        [HttpPut("updateProfile/{id}"), Authorize(Roles = "Customer")]
+        [HttpPut("{id}"), Authorize(Roles = "Customer")]
         public async Task<ActionResult<Customers>> UpdateCustomer(CustomerProfileDTO request, string id)
         {
             var dbCustomer = await dataContext.Customers.FindAsync(id);
@@ -226,7 +226,7 @@ namespace CoffeeShop.Controllers
             return Ok(await dataContext.Customers.ToListAsync());
         }
 
-        [HttpDelete("Delete/{id}")]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteCustomerById(string id)
         {
             var dbCustomer = await dataContext.Customers.FindAsync(id);
