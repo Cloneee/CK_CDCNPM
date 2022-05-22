@@ -16,7 +16,7 @@ namespace CoffeeShop.Controllers
             this.dataContext = dataContext;
         }
 
-        [HttpGet()]
+        [HttpGet]
         public async Task<ActionResult<List<Orders>>> GetAll()
         {
             return Ok(await dataContext.Orders.ToListAsync());
@@ -25,25 +25,16 @@ namespace CoffeeShop.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Orders>> GetById(string id)
         {
-            var dbOrder = await dataContext.Orders.FindAsync(id);
+            var dbOrder = dataContext.Orders
+                .Include(order => order.OrderItems)
+                .ThenInclude(orderItems => orderItems.ProductId);
             if (dbOrder == null)
             {
-                return BadRequest("Orders not found");
+                return NotFound("Orders not found");
             }
             return Ok(dbOrder);
         }
-
-        [HttpGet("{OrderId}")]
-        public async Task<ActionResult<List<OrderItems>>> ViewOrderDetail(string OrderId)
-        {
-            var OrderItems = await dataContext.OrderItems
-                .Where(c => c.OrderId == OrderId)
-                .ToListAsync();
-
-            return OrderItems;
-        }
-
-        [HttpPost()]
+        [HttpPost]
         public async Task<ActionResult<List<Orders>>> AddOrder(OrdersDTO orders)
         {
             var newOrderId = "BILL" + AutoGenerateId();
@@ -59,13 +50,11 @@ namespace CoffeeShop.Controllers
             var newOrder = new Orders
             {
                 OrderId = newOrderId,
-                shippingAddress = orders.shippingAddress,
                 Address = orders.Address,
-                Status = orders.Status,
                 totalPrice = orders.totalPrice,
                 CustomersId = orders.CustomersId,
                 EmployeesId = orders.EmployeesId,
-                dateOrdered = orders.dateOrdered
+                dateOrdered = DateTime.Now
             };
 
             dataContext.Orders.Add(newOrder);
@@ -83,13 +72,10 @@ namespace CoffeeShop.Controllers
                 return BadRequest("Orders not found");
             }
 
-            dbOrder.shippingAddress = request.shippingAddress;
             dbOrder.Address = request.Address;
-            dbOrder.Status = request.Status;
             dbOrder.totalPrice = request.totalPrice;
             dbOrder.CustomersId = request.CustomersId;
             dbOrder.EmployeesId = request.EmployeesId;
-            dbOrder.dateOrdered = request.dateOrdered;
 
             await dataContext.SaveChangesAsync();
             return Ok(dbOrder);

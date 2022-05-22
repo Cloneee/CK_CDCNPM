@@ -161,37 +161,37 @@ namespace CoffeeShop.Controllers
             return Ok(new { token = token, role = employee.Role, name = employee.Name });
         }
 
-        [HttpPost("ChangePassword")]
-        public async Task<ActionResult<Customers>> ChangePassword(ChangePasswordDTO request)
-        {
+        // [HttpPost("ChangePassword")]
+        // public async Task<ActionResult<Customers>> ChangePassword(ChangePasswordDTO request)
+        // {
 
-            var employee = dataContext.Employees
-                .Where(s => s.Email == request.Username)
-                .SingleOrDefault();
+        //     var employee = dataContext.Employees
+        //         .Where(s => s.Email == request.Username)
+        //         .SingleOrDefault();
 
-            if (employee == null)
-                return BadRequest("Employee not found");
+        //     if (employee == null)
+        //         return BadRequest("Employee not found");
 
-            if (employee.Email != request.Username)
-            {
-                return BadRequest("Invalid username");
-            }
-            if (!VerifyPasswordHash(request.currentPassword, employee.Password, employee.PasswordKey))
-            {
-                return BadRequest("Wrong password");
-            }
-            if (request.confirmPassword != request.newPassword)
-            {
-                return BadRequest("confirm password does not match");
-            }
-            CreatePasswordHash(request.confirmPassword, out byte[] passwordHash, out byte[] passwordKey);
+        //     if (employee.Email != request.Username)
+        //     {
+        //         return BadRequest("Invalid username");
+        //     }
+        //     if (!VerifyPasswordHash(request.currentPassword, employee.Password, employee.PasswordKey))
+        //     {
+        //         return BadRequest("Wrong password");
+        //     }
+        //     if (request.confirmPassword != request.newPassword)
+        //     {
+        //         return BadRequest("confirm password does not match");
+        //     }
+        //     CreatePasswordHash(request.confirmPassword, out byte[] passwordHash, out byte[] passwordKey);
 
-            employee.Password = passwordHash;
-            employee.PasswordKey = passwordKey;
+        //     employee.Password = passwordHash;
+        //     employee.PasswordKey = passwordKey;
 
-            await dataContext.SaveChangesAsync();
-            return Ok(employee);
-        }
+        //     await dataContext.SaveChangesAsync();
+        //     return Ok(employee);
+        // }
 
         [HttpGet()]
         public async Task<ActionResult<List<Employees>>> GetAll()

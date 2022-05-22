@@ -2,10 +2,7 @@
 {
     public class ChangePasswordDTO
     {
-        public string Username { get; set; }
-        public string currentPassword { get; set; }
-        public string newPassword { get; set; }
-
-        public string confirmPassword { get; set; }
+        public string oldPassword { get; set; } = String.Empty;
+        public string newPassword { get; set; } = String.Empty;
     }
 }
