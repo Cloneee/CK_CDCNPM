@@ -210,39 +210,39 @@ namespace CoffeeShop.Controllers
             return Ok(dbEmployee);
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<Employees>> UpdateEmployee(SalaryNRoleDTO request, string id)
-        {
-            var dbEmployee = await dataContext.Employees.FindAsync(id);
-            if (dbEmployee == null)
-            {
-                return BadRequest("Employees not found");
-            }
+        // [HttpPut("{id}")]
+        // public async Task<ActionResult<Employees>> UpdateEmployee(SalaryNRoleDTO request, string id)
+        // {
+        //     var dbEmployee = await dataContext.Employees.FindAsync(id);
+        //     if (dbEmployee == null)
+        //     {
+        //         return BadRequest("Employees not found");
+        //     }
 
-            dbEmployee.Salary = request.Salary;
-            dbEmployee.Role = request.Role;
+        //     dbEmployee.Salary = request.Salary;
+        //     dbEmployee.Role = request.Role;
 
-            await dataContext.SaveChangesAsync();
-            return Ok(dbEmployee);
-        }
+        //     await dataContext.SaveChangesAsync();
+        //     return Ok(dbEmployee);
+        // }
 
-        [HttpPut("UpdateProfile/{id}")]
-        public async Task<ActionResult<Employees>> UpdateProfile(StaffProfileDTO request, string id)
-        {
-            var dbEmployee = await dataContext.Employees.FindAsync(id);
-            if (dbEmployee == null)
-            {
-                return BadRequest("Employees not found");
-            }
+        // [HttpPut("{id}")]
+        // public async Task<ActionResult<Employees>> UpdateProfile(StaffProfileDTO request, string id)
+        // {
+        //     var dbEmployee = await dataContext.Employees.FindAsync(id);
+        //     if (dbEmployee == null)
+        //     {
+        //         return BadRequest("Employees not found");
+        //     }
 
-            dbEmployee.Name = request.Name;
-            dbEmployee.Email = request.Email;
-            dbEmployee.Address = request.Address;
-            dbEmployee.Phone = request.Phone;
+        //     dbEmployee.Name = request.Name;
+        //     dbEmployee.Email = request.Email;
+        //     dbEmployee.Address = request.Address;
+        //     dbEmployee.Phone = request.Phone;
 
-            await dataContext.SaveChangesAsync();
-            return Ok(dbEmployee);
-        }
+        //     await dataContext.SaveChangesAsync();
+        //     return Ok(dbEmployee);
+        // }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteEmployeeById(string id)

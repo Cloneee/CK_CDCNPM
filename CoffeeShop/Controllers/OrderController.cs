@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using CoffeeShop.Model;
 using CoffeeShop.DTO;
-
+using System.Security.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 namespace CoffeeShop.Controllers
 {
     [Route("api/[controller]")]
@@ -19,9 +21,16 @@ namespace CoffeeShop.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Orders>>> GetAll()
         {
-            return Ok(await dataContext.Orders.ToListAsync());
+            return Ok(new {data = dataContext.Orders
+            .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+            .Include(o => o.Customer)
+            .Include(o => o.Employee)
+            .ToList(),
+            totalPage = 1,
+            currentPage = 1
+            });
         }
-
         [HttpGet("{id}")]
         public async Task<ActionResult<Orders>> GetById(string id)
         {
@@ -65,14 +74,17 @@ namespace CoffeeShop.Controllers
                 orderItem.Quantity = item.Quantity;
                 orderItems.Add(orderItem);
             }
+            string id = GetLoggedUserId();
+            Customers customer = dataContext.Customers.Find(request.CustomerId);
+            Employees employee = dataContext.Employees.Find(request.EmployeeId);
             var newOrder = new Orders
             {
                 OrderId = newOrderId,
-                Address = request.Address,
+                Address = customer.Address,
                 OrderItems = orderItems,
                 TotalPrice = request.TotalPrice,
-                Customer = dataContext.Customers.Find(request.CustomerId),
-                Employee = dataContext.Employees.Find(request.EmployeeId),
+                Customer = customer,
+                Employee = employee,
                 DateOrdered = DateTime.Now
             };
             dataContext.Orders.Add(newOrder);
@@ -136,6 +148,15 @@ namespace CoffeeShop.Controllers
             }
 
             return id;
+        }
+        private string GetLoggedUserId()
+        {
+            if (!User.Identity.IsAuthenticated)
+            {
+                throw new AuthenticationException();
+            }
+            string userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
+            return userId;
         }
     }
 }
