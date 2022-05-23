@@ -11,15 +11,9 @@ namespace CoffeeShop.Model
         public String Address {get; set; } = String.Empty;
         public String Status {get; set; } = String.Empty;
         public ICollection<OrderItems> OrderItems { get; set; } = new List<OrderItems>();
-        public int totalPrice {get; set; }
-        public string? CustomersId { get; set; } // khóa ngoại
-        [ForeignKey("CustomersId")]
-        [JsonIgnore]
-        public Customers Customers { get; set; }
-        public string? EmployeesId   { get; set; } // khóa ngoại
-        [ForeignKey("EmployeesId")]
-        [JsonIgnore]
-        public Employees Employees { get; set; }
-        public DateTime dateOrdered { get; set; }
+        public int TotalPrice {get; set; }
+        public Customers? Customer { get; set; }
+        public Employees? Employee { get; set; }
+        public DateTime DateOrdered { get; set; }
     }
 }

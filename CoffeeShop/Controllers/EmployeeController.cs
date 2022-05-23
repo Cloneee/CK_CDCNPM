@@ -193,7 +193,7 @@ namespace CoffeeShop.Controllers
         //     return Ok(employee);
         // }
 
-        [HttpGet()]
+        [HttpGet]
         public async Task<ActionResult<List<Employees>>> GetAll()
         {
             return Ok(await dataContext.Employees.Select(x => new { x.EmployeeId, x.Name, x.Phone, x.Email, x.Address, x.Salary, x.Role }).ToListAsync());

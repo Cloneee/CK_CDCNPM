@@ -26,8 +26,7 @@ namespace CoffeeShop.Controllers
         public async Task<ActionResult<Orders>> GetById(string id)
         {
             var dbOrder = dataContext.Orders
-                .Include(order => order.OrderItems)
-                .ThenInclude(orderItems => orderItems.ProductId);
+                .Include(order => order.OrderItems);
             if (dbOrder == null)
             {
                 return NotFound("Orders not found");
@@ -35,7 +34,7 @@ namespace CoffeeShop.Controllers
             return Ok(dbOrder);
         }
         [HttpPost]
-        public async Task<ActionResult<List<Orders>>> AddOrder(OrdersDTO orders)
+        public async Task<ActionResult<List<Orders>>> CreateOrder(OrdersDTO request)
         {
             var newOrderId = "BILL" + AutoGenerateId();
             var checkId = await dataContext.Orders.FindAsync(newOrderId);
@@ -47,39 +46,57 @@ namespace CoffeeShop.Controllers
                     checkId = await dataContext.Orders.FindAsync(newOrderId);
                 }
             }
+            List<OrderItems> orderItems = new List<OrderItems>();
+            foreach (var item in request.OrderItems)
+            {
+                var newOrderItemId = "ODIT" + AutoGenerateId();
+                var checkOrderItemId = await dataContext.OrderItems.FindAsync(newOrderItemId);
+                if (checkOrderItemId != null)
+                {
+                    while (checkOrderItemId != null)
+                    {
+                        newOrderItemId = "ODIT" + AutoGenerateId();
+                        checkOrderItemId = await dataContext.OrderItems.FindAsync(newOrderId);
+                    }
+                }
+                OrderItems orderItem = new OrderItems();
+                orderItem.OrderItemId = newOrderItemId;
+                orderItem.Product = dataContext.Products.Find(item.ProductId);
+                orderItem.Quantity = item.Quantity;
+                orderItems.Add(orderItem);
+            }
             var newOrder = new Orders
             {
                 OrderId = newOrderId,
-                Address = orders.Address,
-                totalPrice = orders.totalPrice,
-                CustomersId = orders.CustomersId,
-                EmployeesId = orders.EmployeesId,
-                dateOrdered = DateTime.Now
+                Address = request.Address,
+                OrderItems = orderItems,
+                TotalPrice = request.TotalPrice,
+                Customer = dataContext.Customers.Find(request.CustomerId),
+                Employee = dataContext.Employees.Find(request.EmployeeId),
+                DateOrdered = DateTime.Now
             };
-
             dataContext.Orders.Add(newOrder);
             await dataContext.SaveChangesAsync();
-
             return Ok(newOrder);
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<Orders>> UpdateOrder(OrdersDTO request, string id)
-        {
-            var dbOrder = await dataContext.Orders.FindAsync(id);
-            if (dbOrder == null)
-            {
-                return BadRequest("Orders not found");
-            }
+        // [HttpPut("{id}")]
+        // public async Task<ActionResult<Orders>> UpdateOrder(OrdersDTO request, string id)
+        // {
+        //     var dbOrder = await dataContext.Orders.FindAsync(id);
+        //     if (dbOrder == null)
+        //     {
+        //         return BadRequest("Orders not found");
+        //     }
 
-            dbOrder.Address = request.Address;
-            dbOrder.totalPrice = request.totalPrice;
-            dbOrder.CustomersId = request.CustomersId;
-            dbOrder.EmployeesId = request.EmployeesId;
+        //     dbOrder.Address = request.Address;
+        //     dbOrder.TotalPrice = request.TotalPrice;
+        //     dbOrder.CustomersId = request.CustomersId;
+        //     dbOrder.EmployeesId = request.EmployeesId;
 
-            await dataContext.SaveChangesAsync();
-            return Ok(dbOrder);
-        }
+        //     await dataContext.SaveChangesAsync();
+        //     return Ok(dbOrder);
+        // }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteCustomerById(string id)
