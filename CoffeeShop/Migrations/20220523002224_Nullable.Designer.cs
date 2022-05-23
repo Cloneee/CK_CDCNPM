@@ -4,6 +4,7 @@ using CoffeeShop.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoffeeShop.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20220523002224_Nullable")]
+    partial class Nullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -131,7 +133,8 @@ namespace CoffeeShop.Migrations
                     b.Property<string>("OrderItemId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("OrdersOrderId")
+                    b.Property<string>("OrderId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProductId")
@@ -143,7 +146,7 @@ namespace CoffeeShop.Migrations
 
                     b.HasKey("OrderItemId");
 
-                    b.HasIndex("OrdersOrderId");
+                    b.HasIndex("OrderId");
 
                     b.HasIndex("ProductId");
 
@@ -253,15 +256,19 @@ namespace CoffeeShop.Migrations
 
             modelBuilder.Entity("CoffeeShop.Model.OrderItems", b =>
                 {
-                    b.HasOne("CoffeeShop.Model.Orders", null)
+                    b.HasOne("CoffeeShop.Model.Orders", "Order")
                         .WithMany("OrderItems")
-                        .HasForeignKey("OrdersOrderId");
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("CoffeeShop.Model.Products", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Order");
 
                     b.Navigation("Product");
                 });
